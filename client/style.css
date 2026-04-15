@@ -1,0 +1,160 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  transition: 0.3s;
+}
+
+/* 🌙 LIGHT MODE */
+body.light {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* CONTAINER */
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* HEADER */
+h1 {
+  font-size: 28px;
+}
+
+/* STATS */
+.stats {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+}
+
+.stats div {
+  background: rgba(255,255,255,0.1);
+  padding: 10px 20px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+/* BUTTONS */
+button {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+/* SPECIAL BUTTONS */
+button:nth-child(2) {
+  background: #ef4444;
+  color: white;
+}
+
+.task-form button {
+  background: #22c55e;
+  color: white;
+}
+
+/* FORM */
+.task-form input {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  border: none;
+}
+
+/* GRID */
+.task-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+/* TASK CARD ✨ */
+.task {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  padding: 15px;
+  border-radius: 18px;
+  transition: 0.3s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.task:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+/* PRIORITY */
+.priority {
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.priority.High {
+  background: #ef4444;
+}
+
+.priority.Medium {
+  background: #facc15;
+  color: black;
+}
+
+.priority.Low {
+  background: #22c55e;
+}
+
+/* SELECT */
+select {
+  margin-top: 10px;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+/* CHART */
+canvas {
+  margin-top: 20px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 15px;
+  padding: 10px;
+}
+
+/* INSIGHT */
+#insight {
+  margin-top: 15px;
+  font-size: 16px;
+  font-weight: bold;
+}
+.tabs {
+  margin: 15px 0;
+}
+
+.tabs button {
+  padding: 8px 15px;
+  margin-right: 10px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background: #1e293b;
+  color: white;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.assigned {
+  font-size: 12px;
+  color: #38bdf8;
+}
+
+.task.team {
+  border-left: 4px solid #38bdf8;
+}

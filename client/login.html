@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login | Smart Dashboard</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.box {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(15px);
+  padding: 40px;
+  border-radius: 20px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #22c55e;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #16a34a;
+}
+
+.link {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #94a3b8;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>🔐 Login</h2>
+
+  <input type="email" id="email" placeholder="Enter Email">
+  <input type="password" id="password" placeholder="Enter Password">
+
+  <button onclick="login()">Login 🚀</button>
+
+  <div class="link" onclick="goToRegister()">
+    Don't have an account? Register
+  </div>
+</div>
+
+<script>
+const API = "http://localhost:3000";
+
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  if (!email || !password) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      alert("Login successful ✅");
+      window.location.href = "index.html";
+    } else {
+      alert(data.message);
+    }
+
+  } catch (err) {
+    alert("Server error ❌");
+  }
+}
+
+function goToRegister() {
+  window.location.href = "register.html";
+}
+</script>
+
+</body>
+</html>

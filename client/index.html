@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Student Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>🚀 Smart Student Dashboard</h1>
+    <div>
+      <button onclick="toggleTheme()">🌙</button>
+      <button onclick="logout()">Logout 🚪</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button onclick="showMyTasks()">My Tasks</button>
+    <button onclick="showTeamTasks()">Team Tasks</button>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div>Total: <span id="total">0</span></div>
+    <div>Completed: <span id="completed">0</span></div>
+    <div>Pending: <span id="pending">0</span></div>
+  </div>
+
+  <!-- CHART -->
+  <canvas id="taskChart"></canvas>
+
+  <!-- INSIGHT -->
+  <p id="insight"></p>
+
+  <!-- ADD TASK -->
+  <div class="task-form">
+    <input type="text" id="title" placeholder="Task Title">
+    <input type="text" id="description" placeholder="Description">
+    <input type="date" id="deadline">
+    <input type="text" id="assignedTo" placeholder="Assign to (email)">
+    <button onclick="addTask()">Add Task ➕</button>
+  </div>
+
+  <!-- TASK LIST -->
+  <div id="taskList" class="task-grid"></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
