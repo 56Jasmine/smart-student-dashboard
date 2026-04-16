@@ -1,7 +1,7 @@
 let chart;
 let currentView = "all";
 
-const API = "http://localhost:3000";
+const API = "https://smart-student-dashboard-2.onrender.com";
 const token = localStorage.getItem("token");
 
 // 🔐 Protect route
