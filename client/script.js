@@ -1,19 +1,13 @@
 let chart;
 let currentView = "all";
 
-const API = "https://smart-student-dashboard2.onrender.com"; // ✅ FIXED URL
+const API = "https://smart-student-dashboard2.onrender.com";
 const token = localStorage.getItem("token");
 
 // 🔐 Protect route
 if (!token) {
   alert("Please login first 🔐");
   window.location.href = "login.html";
-}
-
-// 🔍 Get userId from token
-function getUserIdFromToken() {
-  const payload = JSON.parse(atob(token.split('.')[1]));
-  return payload.id;
 }
 
 // ➕ ADD TASK
@@ -39,9 +33,15 @@ async function addTask() {
     });
 
     const data = await res.json();
-    alert(data.message);
 
-    // Clear inputs
+    if (!res.ok) {
+      alert(data.message || "Error adding task ❌");
+      return;
+    }
+
+    alert("Task added ✅");
+
+    // clear inputs
     document.getElementById("title").value = "";
     document.getElementById("description").value = "";
     document.getElementById("deadline").value = "";
@@ -50,7 +50,8 @@ async function addTask() {
     loadTasks();
 
   } catch (err) {
-    console.error("Add Task Error:", err);
+    console.error(err);
+    alert("Server error ❌");
   }
 }
 
@@ -63,17 +64,21 @@ async function loadTasks() {
 
     const data = await res.json();
 
+    if (!res.ok) {
+      alert("Failed to load tasks ❌");
+      return;
+    }
+
     const taskList = document.getElementById("taskList");
     taskList.innerHTML = "";
 
-    let tasks = data.tasks;
+    let tasks = data.tasks || [];
 
-    // 🔥 FILTER LOGIC (FIXED)
+    // ✅ FIXED FILTER (IMPORTANT)
     if (currentView === "my") {
-      const userId = getUserIdFromToken();
-      tasks = tasks.filter(t => t.userId === userId);
+      tasks = tasks.filter(t => !t.assignedTo); // personal tasks
     } else if (currentView === "team") {
-      tasks = tasks.filter(t => t.assignedTo);
+      tasks = tasks.filter(t => t.assignedTo); // assigned tasks
     }
 
     let total = tasks.length;
@@ -82,7 +87,6 @@ async function loadTasks() {
 
     tasks.forEach(task => {
 
-      // ⏰ Reminder
       let reminder = "";
       if (task.deadline) {
         const days = (new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24);
@@ -94,7 +98,7 @@ async function loadTasks() {
           <h3>${task.title}</h3>
           <p>${task.description || ""}</p>
 
-          <p class="assigned">
+          <p>
             ${task.assignedTo 
               ? "👥 Assigned to: " + task.assignedTo 
               : "👤 Personal Task"}
@@ -134,7 +138,7 @@ async function loadTasks() {
     else text = "📌 Keep going!";
     document.getElementById("insight").innerText = text;
 
-    // 📊 CHART (FIXED)
+    // 📊 CHART
     const todo = tasks.filter(t => t.status === "To Do").length;
     const inProgress = tasks.filter(t => t.status === "In Progress").length;
     const done = tasks.filter(t => t.status === "Done").length;
@@ -155,14 +159,15 @@ async function loadTasks() {
     });
 
   } catch (error) {
-    console.error("Load Task Error:", error);
+    console.error(error);
+    alert("Server error ❌");
   }
 }
 
 // ✏️ EDIT
 async function editTask(id, oldTitle, oldDescription) {
   const title = prompt("Edit title:", oldTitle);
-  const desc = prompt("Edit desc:", oldDescription);
+  const desc = prompt("Edit description:", oldDescription);
 
   if (!title) return;
 
@@ -178,7 +183,7 @@ async function editTask(id, oldTitle, oldDescription) {
   loadTasks();
 }
 
-// 📊 STATUS UPDATE
+// 📊 STATUS
 async function updateStatus(id, status) {
   await fetch(`${API}/tasks/${id}`, {
     method: "PUT",
@@ -215,7 +220,7 @@ function logout() {
   window.location.href = "login.html";
 }
 
-// 🔄 FILTER BUTTONS
+// 🔄 FILTER
 function showMyTasks() {
   currentView = "my";
   loadTasks();
