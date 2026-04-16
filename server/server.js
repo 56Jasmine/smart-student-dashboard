@@ -18,7 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 // ================= DATABASE =================
-mongoose.connect("mongodb+srv://Jasmine_Thakur:Jass123@smart-student-plat-clus.upwdvsf.mongodb.net/?retryWrites=true&w=majority")
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch((err) => console.log("MongoDB Error ❌", err));
 
@@ -75,11 +75,12 @@ app.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials ❌" });
     }
 
-    const token = jwt.sign(
-      { id: user._id, email: user.email },
-      "secret123",
-      { expiresIn: "1d" }
-    );
+  const token = jwt.sign(
+  { id: user._id, email: user.email },
+  process.env.JWT_SECRET,
+  { expiresIn: "1d" }
+);
+
 
     res.status(200).json({
       message: "Login successful ✅",
