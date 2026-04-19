@@ -160,7 +160,7 @@ async function loadTasks() {
 
   } catch (error) {
     console.error(error);
-    alert("Server error ❌");
+    alert("Server error ");
   }
 }
 
