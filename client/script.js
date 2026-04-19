@@ -1,16 +1,63 @@
 let chart;
 let currentView = "all";
 
-const API = "https://smart-student-dashboard-2.onrender.com";
+const API = "https://smart-student-dashboard2.onrender.com";
 const token = localStorage.getItem("token");
 
-// 🔐 Protect route
+// Protect route
 if (!token) {
-  alert("Please login first 🔐");
+  alert("Please login first");
   window.location.href = "login.html";
 }
 
-// ➕ ADD TASK
+// LOAD USER PROFILE
+async function loadUserProfile() {
+  try {
+    const res = await fetch(`${API}/me`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    const user = await res.json();
+
+    if (user.message === "Invalid token") {
+      logout();
+      return;
+    }
+
+    document.getElementById("userProfile").innerHTML = `
+      <div style="padding:10px; background:#1e293b; border-radius:10px;">
+        <strong>${user.name}</strong><br>
+        ${user.email}
+      </div>
+    `;
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// LOAD USERS FOR DROPDOWN
+async function loadUsers() {
+  try {
+    const res = await fetch(`${API}/users`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    const users = await res.json();
+
+    const select = document.getElementById("assignedTo");
+
+    select.innerHTML = `<option value="">Assign to</option>`;
+
+    users.forEach(u => {
+      select.innerHTML += `<option value="${u.email}">${u.email}</option>`;
+    });
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// ADD TASK
 async function addTask() {
   const title = document.getElementById("title").value;
   const description = document.getElementById("description").value;
@@ -18,44 +65,28 @@ async function addTask() {
   const assignedTo = document.getElementById("assignedTo").value;
 
   if (!title) {
-    alert("Title required!");
+    alert("Title required");
     return;
   }
 
-  try {
-    const res = await fetch(`${API}/tasks`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({ title, description, deadline, assignedTo })
-    });
+  await fetch(`${API}/tasks`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ title, description, deadline, assignedTo })
+  });
 
-    const data = await res.json();
+  document.getElementById("title").value = "";
+  document.getElementById("description").value = "";
+  document.getElementById("deadline").value = "";
+  document.getElementById("assignedTo").value = "";
 
-    if (!res.ok) {
-      alert(data.message || "Error adding task ❌");
-      return;
-    }
-
-    alert("Task added ✅");
-
-    // clear inputs
-    document.getElementById("title").value = "";
-    document.getElementById("description").value = "";
-    document.getElementById("deadline").value = "";
-    document.getElementById("assignedTo").value = "";
-
-    loadTasks();
-
-  } catch (err) {
-    console.error(err);
-    alert("Server error ❌");
-  }
+  loadTasks();
 }
 
-// 📥 LOAD TASKS
+// LOAD TASKS
 async function loadTasks() {
   try {
     const res = await fetch(`${API}/tasks`, {
@@ -63,22 +94,21 @@ async function loadTasks() {
     });
 
     const data = await res.json();
-
-    if (!res.ok) {
-      alert("Failed to load tasks ❌");
-      return;
-    }
+    let tasks = data.tasks;
 
     const taskList = document.getElementById("taskList");
     taskList.innerHTML = "";
 
-    let tasks = data.tasks || [];
+    // SEARCH
+    const search = document.getElementById("search").value.toLowerCase();
+    tasks = tasks.filter(t => t.title.toLowerCase().includes(search));
 
-    // ✅ FIXED FILTER (IMPORTANT)
-    if (currentView === "my") {
-      tasks = tasks.filter(t => !t.assignedTo); // personal tasks
-    } else if (currentView === "team") {
-      tasks = tasks.filter(t => t.assignedTo); // assigned tasks
+    // SORT
+    const sort = document.getElementById("sort").value;
+
+    if (sort === "priority") {
+      const order = { High: 3, Medium: 2, Low: 1 };
+      tasks.sort((a, b) => order[b.priority] - order[a.priority]);
     }
 
     let total = tasks.length;
@@ -88,29 +118,37 @@ async function loadTasks() {
     tasks.forEach(task => {
 
       let reminder = "";
+      let overdue = false;
+
       if (task.deadline) {
         const days = (new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24);
-        if (days <= 1) reminder = "⏰ Due soon!";
+
+        if (days <= 1 && days >= 0) {
+          reminder = "Due soon";
+          showNotification(task.title + " is due soon");
+        }
+
+        if (days < 0) {
+          reminder = "Overdue";
+          overdue = true;
+          showNotification(task.title + " is overdue");
+        }
       }
 
       taskList.innerHTML += `
-        <div class="task ${task.assignedTo ? "team" : ""}">
+        <div class="task">
           <h3>${task.title}</h3>
           <p>${task.description || ""}</p>
 
-          <p>
-            ${task.assignedTo 
-              ? "👥 Assigned to: " + task.assignedTo 
-              : "👤 Personal Task"}
-          </p>
+          <p>${task.assignedTo ? "Assigned to: " + task.assignedTo : "Personal"}</p>
 
-          <p style="color:red;">${reminder}</p>
+          <p style="color:${overdue ? "red" : "orange"}">${reminder}</p>
 
-          <p>
-            <span class="priority ${task.priority}">
-              ${task.priority}
-            </span>
-          </p>
+          <span class="priority ${task.priority}">
+            ${task.priority}
+          </span>
+
+          <br><br>
 
           <select onchange="updateStatus('${task._id}', this.value)">
             <option ${task.status==="To Do"?"selected":""}>To Do</option>
@@ -120,51 +158,31 @@ async function loadTasks() {
 
           <br><br>
 
-          <button onclick="editTask('${task._id}', \`${task.title}\`, \`${task.description || ""}\`)">Edit ✏️</button>
-          <button onclick="deleteTask('${task._id}')">Delete ❌</button>
+          <button onclick="editTask('${task._id}', \`${task.title}\`, \`${task.description || ""}\`)">Edit</button>
+          <button onclick="deleteTask('${task._id}')">Delete</button>
         </div>
       `;
     });
 
-    // 📊 STATS
     document.getElementById("total").innerText = total;
     document.getElementById("completed").innerText = completed;
     document.getElementById("pending").innerText = pending;
 
-    // 🧠 INSIGHT
-    let text = "";
-    if (pending > 5) text = "⚠️ Too many tasks!";
-    else if (completed > pending) text = "🔥 Great work!";
-    else text = "📌 Keep going!";
-    document.getElementById("insight").innerText = text;
-
-    // 📊 CHART
-    const todo = tasks.filter(t => t.status === "To Do").length;
-    const inProgress = tasks.filter(t => t.status === "In Progress").length;
-    const done = tasks.filter(t => t.status === "Done").length;
-
-    if (chart) chart.destroy();
-
-    const ctx = document.getElementById("taskChart").getContext("2d");
-
-    chart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: ["To Do", "In Progress", "Done"],
-        datasets: [{
-          label: "Tasks",
-          data: [todo, inProgress, done]
-        }]
-      }
-    });
-
-  } catch (error) {
-    console.error(error);
-    alert("Server error ❌");
+  } catch (err) {
+    console.error(err);
   }
 }
 
-// ✏️ EDIT
+// NOTIFICATIONS
+function showNotification(message) {
+  if (Notification.permission === "granted") {
+    new Notification(message);
+  } else {
+    Notification.requestPermission();
+  }
+}
+
+// EDIT TASK
 async function editTask(id, oldTitle, oldDescription) {
   const title = prompt("Edit title:", oldTitle);
   const desc = prompt("Edit description:", oldDescription);
@@ -183,7 +201,7 @@ async function editTask(id, oldTitle, oldDescription) {
   loadTasks();
 }
 
-// 📊 STATUS
+// UPDATE STATUS
 async function updateStatus(id, status) {
   await fetch(`${API}/tasks/${id}`, {
     method: "PUT",
@@ -197,9 +215,9 @@ async function updateStatus(id, status) {
   loadTasks();
 }
 
-// ❌ DELETE
+// DELETE
 async function deleteTask(id) {
-  if (!confirm("Delete this task?")) return;
+  if (!confirm("Delete task?")) return;
 
   await fetch(`${API}/tasks/${id}`, {
     method: "DELETE",
@@ -209,27 +227,13 @@ async function deleteTask(id) {
   loadTasks();
 }
 
-// 🌙 THEME
-function toggleTheme() {
-  document.body.classList.toggle("light");
-}
-
-// 🚪 LOGOUT
+// LOGOUT
 function logout() {
   localStorage.removeItem("token");
   window.location.href = "login.html";
 }
 
-// 🔄 FILTER
-function showMyTasks() {
-  currentView = "my";
-  loadTasks();
-}
-
-function showTeamTasks() {
-  currentView = "team";
-  loadTasks();
-}
-
-// 🚀 INIT
+// INIT
+loadUserProfile();
+loadUsers();
 loadTasks();
