@@ -11,11 +11,24 @@
 
   <!-- HEADER -->
   <div class="header">
-    <h1>🚀 Smart Student Dashboard</h1>
+    <h1>Smart Student Dashboard</h1>
     <div>
-      <button onclick="toggleTheme()">🌙</button>
-      <button onclick="logout()">Logout 🚪</button>
+      <button onclick="toggleTheme()">Theme</button>
+      <button onclick="logout()">Logout</button>
     </div>
+  </div>
+
+  <!-- USER PROFILE -->
+  <div id="userProfile" class="profile-box"></div>
+
+  <!-- SEARCH + SORT -->
+  <div class="controls">
+    <input type="text" id="search" placeholder="Search tasks" oninput="loadTasks()">
+
+    <select id="sort" onchange="loadTasks()">
+      <option value="new">Newest</option>
+      <option value="priority">Priority</option>
+    </select>
   </div>
 
   <!-- TABS -->
@@ -43,7 +56,7 @@
     <input type="text" id="description" placeholder="Description">
     <input type="date" id="deadline">
     <input type="text" id="assignedTo" placeholder="Assign to (email)">
-    <button onclick="addTask()">Add Task ➕</button>
+    <button onclick="addTask()">Add Task</button>
   </div>
 
   <!-- TASK LIST -->

@@ -66,12 +66,12 @@ button:hover {
 <body>
 
 <div class="box">
-  <h2>🔐 Login</h2>
+  <h2> Login</h2>
 
   <input type="email" id="email" placeholder="Enter Email">
   <input type="password" id="password" placeholder="Enter Password">
 
-  <button onclick="login()">Login 🚀</button>
+  <button onclick="login()">Login </button>
 
   <div class="link" onclick="goToRegister()">
     Don't have an account? Register
@@ -103,14 +103,14 @@ async function login() {
 
     if (data.token) {
       localStorage.setItem("token", data.token);
-      alert("Login successful ✅");
+      alert("Login successful ");
       window.location.href = "index.html";
     } else {
       alert(data.message);
     }
 
   } catch (err) {
-    alert("Server error ❌");
+    alert("Server error ");
   }
 }
 

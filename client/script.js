@@ -4,13 +4,13 @@ let currentView = "all";
 const API = "https://smart-student-dashboard-2.onrender.com";
 const token = localStorage.getItem("token");
 
-// 🔐 Protect route
+// Protect route
 if (!token) {
-  alert("Please login first ");
+  alert("Please login first");
   window.location.href = "login.html";
 }
 
-// ➕ ADD TASK
+// Add Task
 async function addTask() {
   const title = document.getElementById("title").value;
   const description = document.getElementById("description").value;
@@ -18,7 +18,7 @@ async function addTask() {
   const assignedTo = document.getElementById("assignedTo").value;
 
   if (!title) {
-    alert("Title required!");
+    alert("Title is required");
     return;
   }
 
@@ -35,13 +35,13 @@ async function addTask() {
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.message || "Error adding task ");
+      alert(data.message || "Error adding task");
       return;
     }
 
-    alert("Task added ");
+    alert("Task added successfully");
 
-    // clear inputs
+    // Clear inputs
     document.getElementById("title").value = "";
     document.getElementById("description").value = "";
     document.getElementById("deadline").value = "";
@@ -51,11 +51,11 @@ async function addTask() {
 
   } catch (err) {
     console.error(err);
-    alert("Server error ");
+    alert("Server error");
   }
 }
 
-// 📥 LOAD TASKS
+// Load Tasks
 async function loadTasks() {
   try {
     const res = await fetch(`${API}/tasks`, {
@@ -65,7 +65,7 @@ async function loadTasks() {
     const data = await res.json();
 
     if (!res.ok) {
-      alert("Failed to load tasks ");
+      alert("Failed to load tasks");
       return;
     }
 
@@ -74,11 +74,11 @@ async function loadTasks() {
 
     let tasks = data.tasks || [];
 
-    // ✅ FIXED FILTER (IMPORTANT)
+    // Filter
     if (currentView === "my") {
-      tasks = tasks.filter(t => !t.assignedTo); // personal tasks
+      tasks = tasks.filter(t => !t.assignedTo);
     } else if (currentView === "team") {
-      tasks = tasks.filter(t => t.assignedTo); // assigned tasks
+      tasks = tasks.filter(t => t.assignedTo);
     }
 
     let total = tasks.length;
@@ -90,7 +90,7 @@ async function loadTasks() {
       let reminder = "";
       if (task.deadline) {
         const days = (new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24);
-        if (days <= 1) reminder = " Due soon!";
+        if (days <= 1) reminder = "Due soon";
       }
 
       taskList.innerHTML += `
@@ -100,8 +100,8 @@ async function loadTasks() {
 
           <p>
             ${task.assignedTo 
-              ? "👥 Assigned to: " + task.assignedTo 
-              : "👤 Personal Task"}
+              ? "Assigned to: " + task.assignedTo 
+              : "Personal Task"}
           </p>
 
           <p style="color:red;">${reminder}</p>
@@ -120,25 +120,25 @@ async function loadTasks() {
 
           <br><br>
 
-          <button onclick="editTask('${task._id}', \`${task.title}\`, \`${task.description || ""}\`)">Edit </button>
-          <button onclick="deleteTask('${task._id}')">Delete ❌</button>
+          <button onclick="editTask('${task._id}', \`${task.title}\`, \`${task.description || ""}\`)">Edit</button>
+          <button onclick="deleteTask('${task._id}')">Delete</button>
         </div>
       `;
     });
 
-    // 📊 STATS
+    // Stats
     document.getElementById("total").innerText = total;
     document.getElementById("completed").innerText = completed;
     document.getElementById("pending").innerText = pending;
 
-    // 🧠 INSIGHT
+    // Insight
     let text = "";
-    if (pending > 5) text = "Too many tasks!";
-    else if (completed > pending) text = " Great work!";
-    else text = "📌 Keep going!";
+    if (pending > 5) text = "You have many pending tasks";
+    else if (completed > pending) text = "Good progress";
+    else text = "Keep going";
     document.getElementById("insight").innerText = text;
 
-    // 📊 CHART
+    // Chart
     const todo = tasks.filter(t => t.status === "To Do").length;
     const inProgress = tasks.filter(t => t.status === "In Progress").length;
     const done = tasks.filter(t => t.status === "Done").length;
@@ -160,11 +160,11 @@ async function loadTasks() {
 
   } catch (error) {
     console.error(error);
-    alert("Server error ");
+    alert("Server error");
   }
 }
 
-// ✏️ EDIT
+// Edit Task
 async function editTask(id, oldTitle, oldDescription) {
   const title = prompt("Edit title:", oldTitle);
   const desc = prompt("Edit description:", oldDescription);
@@ -183,7 +183,7 @@ async function editTask(id, oldTitle, oldDescription) {
   loadTasks();
 }
 
-// 📊 STATUS
+// Update Status
 async function updateStatus(id, status) {
   await fetch(`${API}/tasks/${id}`, {
     method: "PUT",
@@ -197,7 +197,7 @@ async function updateStatus(id, status) {
   loadTasks();
 }
 
-// ❌ DELETE
+// Delete Task
 async function deleteTask(id) {
   if (!confirm("Delete this task?")) return;
 
@@ -209,18 +209,18 @@ async function deleteTask(id) {
   loadTasks();
 }
 
-// 🌙 THEME
+// Theme toggle
 function toggleTheme() {
   document.body.classList.toggle("light");
 }
 
-// 🚪 LOGOUT
+// Logout
 function logout() {
   localStorage.removeItem("token");
   window.location.href = "login.html";
 }
 
-// 🔄 FILTER
+// Filters
 function showMyTasks() {
   currentView = "my";
   loadTasks();
@@ -231,5 +231,5 @@ function showTeamTasks() {
   loadTasks();
 }
 
-// 🚀 INIT
+// Init
 loadTasks();
