@@ -56,13 +56,13 @@ button {
 <body>
 
 <div class="box">
-  <h2>📝 Register</h2>
+  <h2>Register</h2>
 
   <input type="text" id="name" placeholder="Enter Name">
   <input type="email" id="email" placeholder="Enter Email">
   <input type="password" id="password" placeholder="Enter Password">
 
-  <button onclick="register()">Register 🚀</button>
+  <button onclick="register()">Register </button>
 
   <div class="link" onclick="goToLogin()">
     Already have an account? Login
@@ -70,7 +70,7 @@ button {
 </div>
 
 <script>
-const API = "https://smart-student-dashboard-2.onrender.com";
+const API = "https://smart-student-dashboard2.onrender.com";
 
 async function register() {
   const name = document.getElementById("name").value;
@@ -94,14 +94,14 @@ async function register() {
     const data = await res.json();
 
     if (res.status === 201) {
-      alert("Registered successfully ✅");
+      alert("Registered successfully ");
       window.location.href = "login.html";
     } else {
       alert(data.message);
     }
 
   } catch (err) {
-    alert("Server error ❌");
+    alert("Server error ");
   }
 }
 

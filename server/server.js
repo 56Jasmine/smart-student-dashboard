@@ -19,8 +19,8 @@ app.use(express.json());
 
 // ================= DATABASE =================
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected "))
-  .catch((err) => console.log("MongoDB Error ", err));
+  .then(() => console.log("MongoDB Connected ✅"))
+  .catch((err) => console.log("MongoDB Error ❌", err));
 
 // ================= TEST ROUTE =================
 app.get("/", (req, res) => {
@@ -31,25 +31,6 @@ app.get("/", (req, res) => {
 // =====================================================
 // ================= AUTH ROUTES ========================
 // =====================================================
-// GET ALL USERS (for dropdown)
-app.get("/users", authMiddleware, async (req, res) => {
-  try {
-    const users = await User.find({}, "name email");
-    res.json(users);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// GET CURRENT USER PROFILE
-app.get("/me", authMiddleware, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // 🔐 REGISTER
 app.post("/register", async (req, res) => {
@@ -71,7 +52,7 @@ app.post("/register", async (req, res) => {
 
     await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully " });
+    res.status(201).json({ message: "User registered successfully ✅" });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -86,23 +67,22 @@ app.post("/login", async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "User not found " });
+      return res.status(400).json({ message: "User not found ❌" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials " });
+      return res.status(400).json({ message: "Invalid credentials ❌" });
     }
 
-  const token = jwt.sign(
-  { id: user._id, email: user.email },
-  process.env.JWT_SECRET,
-  { expiresIn: "1d" }
-);
-
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      "secret123",
+      { expiresIn: "1d" }
+    );
 
     res.status(200).json({
-      message: "Login successful ",
+      message: "Login successful ✅",
       token
     });
 
@@ -119,7 +99,7 @@ app.post("/login", async (req, res) => {
 // 👤 PROFILE
 app.get("/profile", authMiddleware, (req, res) => {
   res.json({
-    message: "Welcome ",
+    message: "Welcome 🎉",
     userId: req.user.id,
     email: req.user.email
   });
@@ -136,7 +116,7 @@ app.post("/tasks", authMiddleware, async (req, res) => {
     const { title, description, deadline, assignedTo } = req.body;
 
     if (!title) {
-      return res.status(400).json({ message: "Title is required " });
+      return res.status(400).json({ message: "Title is required ❌" });
     }
 
     // 🔥 Smart Priority
@@ -160,7 +140,7 @@ app.post("/tasks", authMiddleware, async (req, res) => {
     await newTask.save();
 
     res.status(201).json({
-      message: "Task created successfully ",
+      message: "Task created successfully ✅",
       task: newTask
     });
 
@@ -181,7 +161,7 @@ app.get("/tasks", authMiddleware, async (req, res) => {
     }).sort({ createdAt: -1 });
 
     res.status(200).json({
-      message: "Tasks fetched successfully ",
+      message: "Tasks fetched successfully ✅",
       tasks
     });
 
@@ -216,11 +196,11 @@ app.put("/tasks/:id", authMiddleware, async (req, res) => {
     );
 
     if (!updatedTask) {
-      return res.status(404).json({ message: "Task not found " });
+      return res.status(404).json({ message: "Task not found ❌" });
     }
 
     res.status(200).json({
-      message: "Task updated successfully ",
+      message: "Task updated successfully ✅",
       task: updatedTask
     });
 
@@ -242,11 +222,11 @@ app.delete("/tasks/:id", authMiddleware, async (req, res) => {
     });
 
     if (!deletedTask) {
-      return res.status(404).json({ message: "Task not found " });
+      return res.status(404).json({ message: "Task not found ❌" });
     }
 
     res.status(200).json({
-      message: "Task deleted successfully "
+      message: "Task deleted successfully ❌"
     });
 
   } catch (error) {
@@ -259,7 +239,8 @@ app.delete("/tasks/:id", authMiddleware, async (req, res) => {
 // ================= SERVER =============================
 // =====================================================
 
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} `);
+  console.log(`Server running on port ${PORT} 🚀`);
 });
