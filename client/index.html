@@ -12,20 +12,26 @@
   <!-- HEADER -->
   <div class="header">
     <h1>Smart Student Dashboard</h1>
-    <div>
-      <button onclick="toggleTheme()">Theme</button>
-      <button onclick="logout()">Logout</button>
+
+    <div class="profile-container">
+      <button id="themeBtn">Theme</button>
+
+      <div class="profile-btn" id="profileBtn"></div>
+
+      <div id="dropdown" class="dropdown hidden">
+        <p id="userName"></p>
+        <p id="userEmail"></p>
+        <hr>
+        <button id="logoutBtn">Logout</button>
+      </div>
     </div>
   </div>
 
-  <!-- USER PROFILE -->
-  <div id="userProfile" class="profile-box"></div>
-
   <!-- SEARCH + SORT -->
   <div class="controls">
-    <input type="text" id="search" placeholder="Search tasks" oninput="loadTasks()">
+    <input type="text" id="search" placeholder="Search tasks">
 
-    <select id="sort" onchange="loadTasks()">
+    <select id="sort">
       <option value="new">Newest</option>
       <option value="priority">Priority</option>
     </select>
@@ -33,8 +39,8 @@
 
   <!-- TABS -->
   <div class="tabs">
-    <button onclick="showMyTasks()">My Tasks</button>
-    <button onclick="showTeamTasks()">Team Tasks</button>
+    <button id="myTasksBtn">My Tasks</button>
+    <button id="teamTasksBtn">Team Tasks</button>
   </div>
 
   <!-- STATS -->
@@ -56,7 +62,7 @@
     <input type="text" id="description" placeholder="Description">
     <input type="date" id="deadline">
     <input type="text" id="assignedTo" placeholder="Assign to (email)">
-    <button onclick="addTask()">Add Task</button>
+    <button id="addBtn">Add Task</button>
   </div>
 
   <!-- TASK LIST -->

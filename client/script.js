@@ -10,75 +10,61 @@ if (!token) {
   window.location.href = "login.html";
 }
 
-// Add Task
-async function addTask() {
-  const title = document.getElementById("title").value;
-  const description = document.getElementById("description").value;
-  const deadline = document.getElementById("deadline").value;
-  const assignedTo = document.getElementById("assignedTo").value;
-
-  if (!title) {
-    alert("Title is required");
-    return;
-  }
-
+// ================= USER PROFILE =================
+async function loadUserProfile() {
   try {
-    const res = await fetch(`${API}/tasks`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({ title, description, deadline, assignedTo })
+    const res = await fetch(`${API}/profile`, {
+      headers: { Authorization: `Bearer ${token}` }
     });
 
-    const data = await res.json();
+    const user = await res.json();
 
     if (!res.ok) {
-      alert(data.message || "Error adding task");
+      logout();
       return;
     }
 
-    alert("Task added successfully");
+    document.getElementById("userName").innerText = user.name;
+    document.getElementById("userEmail").innerText = user.email;
 
-    // Clear inputs
-    document.getElementById("title").value = "";
-    document.getElementById("description").value = "";
-    document.getElementById("deadline").value = "";
-    document.getElementById("assignedTo").value = "";
-
-    loadTasks();
+    // show first letter as avatar
+    document.getElementById("profileBtn").innerText =
+      user.name.charAt(0).toUpperCase();
 
   } catch (err) {
     console.error(err);
-    alert("Server error");
   }
 }
 
-// Load Tasks
+// ================= LOAD TASKS =================
 async function loadTasks() {
   try {
     const res = await fetch(`${API}/tasks`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` }
     });
 
     const data = await res.json();
-
-    if (!res.ok) {
-      alert("Failed to load tasks");
-      return;
-    }
+    let tasks = data.tasks || [];
 
     const taskList = document.getElementById("taskList");
     taskList.innerHTML = "";
 
-    let tasks = data.tasks || [];
-
-    // Filter
+    // FILTER
     if (currentView === "my") {
       tasks = tasks.filter(t => !t.assignedTo);
     } else if (currentView === "team") {
       tasks = tasks.filter(t => t.assignedTo);
+    }
+
+    // SEARCH
+    const search = document.getElementById("search").value.toLowerCase();
+    tasks = tasks.filter(t => t.title.toLowerCase().includes(search));
+
+    // SORT
+    const sort = document.getElementById("sort").value;
+    if (sort === "priority") {
+      const order = { High: 3, Medium: 2, Low: 1 };
+      tasks.sort((a, b) => order[b.priority] - order[a.priority]);
     }
 
     let total = tasks.length;
@@ -86,59 +72,62 @@ async function loadTasks() {
     let pending = total - completed;
 
     tasks.forEach(task => {
-
       let reminder = "";
+
       if (task.deadline) {
         const days = (new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24);
         if (days <= 1) reminder = "Due soon";
       }
 
-      taskList.innerHTML += `
-        <div class="task ${task.assignedTo ? "team" : ""}">
-          <h3>${task.title}</h3>
-          <p>${task.description || ""}</p>
+      const div = document.createElement("div");
+      div.className = "task";
 
-          <p>
-            ${task.assignedTo 
-              ? "Assigned to: " + task.assignedTo 
-              : "Personal Task"}
-          </p>
+      div.innerHTML = `
+        <h3>${task.title}</h3>
+        <p>${task.description || ""}</p>
+        <p>${task.assignedTo ? "Assigned to: " + task.assignedTo : "Personal Task"}</p>
+        <p style="color:red;">${reminder}</p>
 
-          <p style="color:red;">${reminder}</p>
+        <span class="priority ${task.priority}">
+          ${task.priority}
+        </span>
 
-          <p>
-            <span class="priority ${task.priority}">
-              ${task.priority}
-            </span>
-          </p>
+        <br><br>
 
-          <select onchange="updateStatus('${task._id}', this.value)">
-            <option ${task.status==="To Do"?"selected":""}>To Do</option>
-            <option ${task.status==="In Progress"?"selected":""}>In Progress</option>
-            <option ${task.status==="Done"?"selected":""}>Done</option>
-          </select>
+        <select class="status">
+          <option ${task.status==="To Do"?"selected":""}>To Do</option>
+          <option ${task.status==="In Progress"?"selected":""}>In Progress</option>
+          <option ${task.status==="Done"?"selected":""}>Done</option>
+        </select>
 
-          <br><br>
+        <br><br>
 
-          <button onclick="editTask('${task._id}', \`${task.title}\`, \`${task.description || ""}\`)">Edit</button>
-          <button onclick="deleteTask('${task._id}')">Delete</button>
-        </div>
+        <button class="edit">Edit</button>
+        <button class="delete">Delete</button>
       `;
+
+      // EVENTS
+      div.querySelector(".status").addEventListener("change", (e) => {
+        updateStatus(task._id, e.target.value);
+      });
+
+      div.querySelector(".edit").addEventListener("click", () => {
+        editTask(task);
+      });
+
+      div.querySelector(".delete").addEventListener("click", () => {
+        deleteTask(task._id);
+      });
+
+      taskList.appendChild(div);
     });
 
-    // Stats
+    // STATS
     document.getElementById("total").innerText = total;
     document.getElementById("completed").innerText = completed;
     document.getElementById("pending").innerText = pending;
 
-    // Insight
-    let text = "";
-    if (pending > 5) text = "You have many pending tasks";
-    else if (completed > pending) text = "Good progress";
-    else text = "Keep going";
-    document.getElementById("insight").innerText = text;
-
-    // Chart
+    // CHART
     const todo = tasks.filter(t => t.status === "To Do").length;
     const inProgress = tasks.filter(t => t.status === "In Progress").length;
     const done = tasks.filter(t => t.status === "Done").length;
@@ -158,24 +147,53 @@ async function loadTasks() {
       }
     });
 
-  } catch (error) {
-    console.error(error);
-    alert("Server error");
+  } catch (err) {
+    console.error(err);
+    alert("Error loading tasks");
   }
 }
 
-// Edit Task
-async function editTask(id, oldTitle, oldDescription) {
-  const title = prompt("Edit title:", oldTitle);
-  const desc = prompt("Edit description:", oldDescription);
+// ================= ADD TASK =================
+async function addTask() {
+  const title = document.getElementById("title").value;
+  const description = document.getElementById("description").value;
+  const deadline = document.getElementById("deadline").value;
+  const assignedTo = document.getElementById("assignedTo").value;
+
+  if (!title) {
+    alert("Title required");
+    return;
+  }
+
+  await fetch(`${API}/tasks`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ title, description, deadline, assignedTo })
+  });
+
+  document.getElementById("title").value = "";
+  document.getElementById("description").value = "";
+  document.getElementById("deadline").value = "";
+  document.getElementById("assignedTo").value = "";
+
+  loadTasks();
+}
+
+// ================= EDIT =================
+async function editTask(task) {
+  const title = prompt("Edit title:", task.title);
+  const desc = prompt("Edit description:", task.description);
 
   if (!title) return;
 
-  await fetch(`${API}/tasks/${id}`, {
+  await fetch(`${API}/tasks/${task._id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      Authorization: `Bearer ${token}`
     },
     body: JSON.stringify({ title, description: desc })
   });
@@ -183,13 +201,13 @@ async function editTask(id, oldTitle, oldDescription) {
   loadTasks();
 }
 
-// Update Status
+// ================= STATUS =================
 async function updateStatus(id, status) {
   await fetch(`${API}/tasks/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      Authorization: `Bearer ${token}`
     },
     body: JSON.stringify({ status })
   });
@@ -197,30 +215,25 @@ async function updateStatus(id, status) {
   loadTasks();
 }
 
-// Delete Task
+// ================= DELETE =================
 async function deleteTask(id) {
   if (!confirm("Delete this task?")) return;
 
   await fetch(`${API}/tasks/${id}`, {
     method: "DELETE",
-    headers: { "Authorization": `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}` }
   });
 
   loadTasks();
 }
 
-// Theme toggle
-function toggleTheme() {
-  document.body.classList.toggle("light");
-}
-
-// Logout
+// ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("token");
   window.location.href = "login.html";
 }
 
-// Filters
+// ================= FILTER =================
 function showMyTasks() {
   currentView = "my";
   loadTasks();
@@ -231,5 +244,33 @@ function showTeamTasks() {
   loadTasks();
 }
 
-// Init
+// ================= THEME =================
+function toggleTheme() {
+  document.body.classList.toggle("light");
+}
+
+// ================= EVENTS =================
+document.getElementById("addBtn").addEventListener("click", addTask);
+document.getElementById("logoutBtn").addEventListener("click", logout);
+document.getElementById("themeBtn").addEventListener("click", toggleTheme);
+
+document.getElementById("myTasksBtn").addEventListener("click", showMyTasks);
+document.getElementById("teamTasksBtn").addEventListener("click", showTeamTasks);
+
+document.getElementById("search").addEventListener("input", loadTasks);
+document.getElementById("sort").addEventListener("change", loadTasks);
+
+// PROFILE DROPDOWN
+document.getElementById("profileBtn").addEventListener("click", () => {
+  document.getElementById("dropdown").classList.toggle("hidden");
+});
+
+window.addEventListener("click", (e) => {
+  if (!e.target.closest(".profile-container")) {
+    document.getElementById("dropdown").classList.add("hidden");
+  }
+});
+
+// ================= INIT =================
+loadUserProfile();
 loadTasks();
