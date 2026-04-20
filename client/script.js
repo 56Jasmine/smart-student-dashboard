@@ -37,30 +37,6 @@ async function loadUserProfile() {
 }
 
 // ================= LOAD TASKS =================
-// LOAD PROFILE
-async function loadUserProfile() {
-  try {
-    const res = await fetch(`${API}/profile`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    const user = await res.json();
-
-    document.getElementById("userName").innerText = user.name;
-    document.getElementById("userEmail").innerText = user.email;
-    document.getElementById("userInitial").innerText = user.name.charAt(0).toUpperCase();
-
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-// TOGGLE DROPDOWN
-function toggleProfile() {
-  const dropdown = document.getElementById("profileDropdown");
-  dropdown.style.display =
-    dropdown.style.display === "block" ? "none" : "block";
-}
 
 async function loadTasks() {
   try {
