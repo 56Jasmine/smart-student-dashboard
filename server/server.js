@@ -96,15 +96,14 @@ app.post("/login", async (req, res) => {
 // ================= PROTECTED ROUTES ===================
 // =====================================================
 
-// 👤 PROFILE
-app.get("/profile", authMiddleware, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
+app.get("/profile", authMiddleware, (req, res) => {
+  res.json({
+    id: req.user.id,
+    email: req.user.email,
+    name: req.user.name || "User"
+  });
 });
+
 
 
 

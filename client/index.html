@@ -13,19 +13,19 @@
   <div class="header">
     <h1>Smart Student Dashboard</h1>
 
-    <div class="profile-container">
-      <button id="themeBtn">Theme</button>
-
-      <div class="profile-btn" id="profileBtn"></div>
-
-      <div id="dropdown" class="dropdown hidden">
-        <p id="userName"></p>
-        <p id="userEmail"></p>
-        <hr>
-        <button id="logoutBtn">Logout</button>
-      </div>
-    </div>
+   <div class="profile-container">
+  <div class="profile-icon" onclick="toggleProfile()">
+    <span id="userInitial">U</span>
   </div>
+
+  <div id="profileDropdown" class="profile-dropdown">
+    <p id="userName"></p>
+    <p id="userEmail"></p>
+    <hr>
+    <button onclick="logout()">Logout</button>
+  </div>
+</div>
+
 
   <!-- SEARCH + SORT -->
   <div class="controls">
