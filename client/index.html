@@ -11,18 +11,22 @@
 
   <!-- HEADER -->
   <div class="header">
-    <h1>Smart Student Dashboard</h1>
     <div>
+      <h1>Smart Student Dashboard</h1>
+      <p id="greeting"></p>
+    </div>
+
+    <div class="header-actions">
       <button onclick="toggleTheme()">Theme</button>
       <button onclick="logout()">Logout</button>
     </div>
   </div>
 
   <!-- SEARCH + SORT -->
-  <div style="margin:10px 0;">
-    <input type="text" id="search" placeholder="Search tasks" oninput="loadTasks()">
+  <div class="controls">
+    <input type="text" id="search" placeholder="Search tasks">
 
-    <select id="sort" onchange="loadTasks()">
+    <select id="sort">
       <option value="new">Newest</option>
       <option value="priority">Priority</option>
     </select>
@@ -30,8 +34,8 @@
 
   <!-- TABS -->
   <div class="tabs">
-    <button onclick="showMyTasks()">My Tasks</button>
-    <button onclick="showTeamTasks()">Team Tasks</button>
+    <button id="myTasksBtn">My Tasks</button>
+    <button id="teamTasksBtn">Team Tasks</button>
   </div>
 
   <!-- STATS -->
@@ -39,6 +43,11 @@
     <div>Total: <span id="total">0</span></div>
     <div>Completed: <span id="completed">0</span></div>
     <div>Pending: <span id="pending">0</span></div>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-container">
+    <div id="progressBar"></div>
   </div>
 
   <!-- CHART -->
@@ -53,13 +62,16 @@
     <input type="text" id="description" placeholder="Description">
     <input type="date" id="deadline">
     <input type="text" id="assignedTo" placeholder="Assign to (email)">
-    <button onclick="addTask()">Add Task</button>
+    <button id="addBtn">Add Task</button>
   </div>
 
   <!-- TASK LIST -->
   <div id="taskList" class="task-grid"></div>
 
 </div>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast" class="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="script.js"></script>

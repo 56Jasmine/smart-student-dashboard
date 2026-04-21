@@ -10,34 +10,33 @@ if (!token) {
   window.location.href = "login.html";
 }
 
-// ================= USER PROFILE =================
-async function loadUserProfile() {
-  try {
-    const res = await fetch(`${API}/profile`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+// ================= TOAST =================
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
 
-    const user = await res.json();
+  toast.innerText = msg;
+  toast.style.display = "block";
 
-    if (!res.ok) {
-      logout();
-      return;
-    }
+  setTimeout(() => {
+    toast.style.display = "none";
+  }, 2000);
+}
 
-    document.getElementById("userName").innerText = user.name;
-    document.getElementById("userEmail").innerText = user.email;
+// ================= GREETING =================
+function setGreeting() {
+  const hour = new Date().getHours();
+  let text = "Welcome";
 
-    // show first letter as avatar
-    document.getElementById("profileBtn").innerText =
-      user.name.charAt(0).toUpperCase();
+  if (hour < 12) text = "Good morning";
+  else if (hour < 18) text = "Good afternoon";
+  else text = "Good evening";
 
-  } catch (err) {
-    console.error(err);
-  }
+  const greet = document.getElementById("greeting");
+  if (greet) greet.innerText = text;
 }
 
 // ================= LOAD TASKS =================
-
 async function loadTasks() {
   try {
     const res = await fetch(`${API}/tasks`, {
@@ -48,7 +47,7 @@ async function loadTasks() {
     let tasks = data.tasks || [];
 
     const taskList = document.getElementById("taskList");
-    taskList.innerHTML = "";
+    taskList.innerHTML = "Loading...";
 
     // FILTER
     if (currentView === "my") {
@@ -58,15 +57,23 @@ async function loadTasks() {
     }
 
     // SEARCH
-    const search = document.getElementById("search").value.toLowerCase();
+    const search = document.getElementById("search")?.value?.toLowerCase() || "";
     tasks = tasks.filter(t => t.title.toLowerCase().includes(search));
 
     // SORT
-    const sort = document.getElementById("sort").value;
+    const sort = document.getElementById("sort")?.value;
     if (sort === "priority") {
       const order = { High: 3, Medium: 2, Low: 1 };
       tasks.sort((a, b) => order[b.priority] - order[a.priority]);
     }
+
+    // EMPTY STATE
+    if (tasks.length === 0) {
+      taskList.innerHTML = "<p>No tasks found</p>";
+      return;
+    }
+
+    taskList.innerHTML = "";
 
     let total = tasks.length;
     let completed = tasks.filter(t => t.status === "Done").length;
@@ -74,14 +81,24 @@ async function loadTasks() {
 
     tasks.forEach(task => {
       let reminder = "";
+      let overdue = false;
 
       if (task.deadline) {
         const days = (new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24);
-        if (days <= 1) reminder = "Due soon";
+
+        if (days <= 1 && days >= 0) reminder = "Due soon";
+        if (days < 0) {
+          reminder = "Overdue";
+          overdue = true;
+        }
       }
 
       const div = document.createElement("div");
       div.className = "task";
+
+      if (overdue) {
+        div.style.borderLeft = "4px solid red";
+      }
 
       div.innerHTML = `
         <h3>${task.title}</h3>
@@ -128,6 +145,19 @@ async function loadTasks() {
     document.getElementById("completed").innerText = completed;
     document.getElementById("pending").innerText = pending;
 
+    // PROGRESS BAR
+    const percent = total ? (completed / total) * 100 : 0;
+    const bar = document.getElementById("progressBar");
+    if (bar) bar.style.width = percent + "%";
+
+    // INSIGHT
+    let text = "";
+    if (pending > 5) text = "Too many tasks";
+    else if (completed > pending) text = "Good progress";
+    else text = "Keep going";
+
+    document.getElementById("insight").innerText = text;
+
     // CHART
     const todo = tasks.filter(t => t.status === "To Do").length;
     const inProgress = tasks.filter(t => t.status === "In Progress").length;
@@ -150,19 +180,19 @@ async function loadTasks() {
 
   } catch (err) {
     console.error(err);
-    alert("Error loading tasks");
+    showToast("Error loading tasks");
   }
 }
 
 // ================= ADD TASK =================
 async function addTask() {
-  const title = document.getElementById("title").value;
+  const title = document.getElementById("title").value.trim();
   const description = document.getElementById("description").value;
   const deadline = document.getElementById("deadline").value;
   const assignedTo = document.getElementById("assignedTo").value;
 
   if (!title) {
-    alert("Title required");
+    showToast("Title required");
     return;
   }
 
@@ -180,6 +210,7 @@ async function addTask() {
   document.getElementById("deadline").value = "";
   document.getElementById("assignedTo").value = "";
 
+  showToast("Task added");
   loadTasks();
 }
 
@@ -199,6 +230,7 @@ async function editTask(task) {
     body: JSON.stringify({ title, description: desc })
   });
 
+  showToast("Task updated");
   loadTasks();
 }
 
@@ -225,6 +257,7 @@ async function deleteTask(id) {
     headers: { Authorization: `Bearer ${token}` }
   });
 
+  showToast("Task deleted");
   loadTasks();
 }
 
@@ -252,26 +285,23 @@ function toggleTheme() {
 
 // ================= EVENTS =================
 document.getElementById("addBtn").addEventListener("click", addTask);
-document.getElementById("logoutBtn").addEventListener("click", logout);
-document.getElementById("themeBtn").addEventListener("click", toggleTheme);
-
 document.getElementById("myTasksBtn").addEventListener("click", showMyTasks);
 document.getElementById("teamTasksBtn").addEventListener("click", showTeamTasks);
-
 document.getElementById("search").addEventListener("input", loadTasks);
 document.getElementById("sort").addEventListener("change", loadTasks);
 
-// PROFILE DROPDOWN
-document.getElementById("profileBtn").addEventListener("click", () => {
-  document.getElementById("dropdown").classList.toggle("hidden");
+// ENTER KEY ADD
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") addTask();
 });
 
-window.addEventListener("click", (e) => {
-  if (!e.target.closest(".profile-container")) {
-    document.getElementById("dropdown").classList.add("hidden");
-  }
-});
+// AUTO REFRESH
+setInterval(loadTasks, 10000);
 
-// ================= INIT =================
-loadUserProfile();
+// INIT
 loadTasks();
+setGreeting();
+
+// MIN DATE FIX
+document.getElementById("deadline").min =
+  new Date().toISOString().split("T")[0];
