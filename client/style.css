@@ -206,3 +206,24 @@ body.light canvas {
 body.light button {
   background: #2563eb;
 }
+.kanban {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.column {
+  flex: 1;
+  background: #1e293b;
+  padding: 10px;
+  border-radius: 12px;
+  min-height: 300px;
+}
+
+.dropzone {
+  min-height: 250px;
+}
+
+.task {
+  cursor: grab;
+}

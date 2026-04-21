@@ -46,9 +46,6 @@ async function loadTasks() {
     const data = await res.json();
     let tasks = data.tasks || [];
 
-    const taskList = document.getElementById("taskList");
-    taskList.innerHTML = "Loading...";
-
     // FILTER
     if (currentView === "my") {
       tasks = tasks.filter(t => !t.assignedTo);
@@ -67,13 +64,16 @@ async function loadTasks() {
       tasks.sort((a, b) => order[b.priority] - order[a.priority]);
     }
 
+    // CLEAR COLUMNS
+    document.getElementById("todo").innerHTML = "";
+    document.getElementById("inProgress").innerHTML = "";
+    document.getElementById("done").innerHTML = "";
+
     // EMPTY STATE
     if (tasks.length === 0) {
-      taskList.innerHTML = "<p>No tasks found</p>";
+      document.getElementById("todo").innerHTML = "<p>No tasks</p>";
       return;
     }
-
-    taskList.innerHTML = "";
 
     let total = tasks.length;
     let completed = tasks.filter(t => t.status === "Done").length;
@@ -95,6 +95,8 @@ async function loadTasks() {
 
       const div = document.createElement("div");
       div.className = "task";
+      div.draggable = true;
+      div.dataset.id = task._id;
 
       if (overdue) {
         div.style.borderLeft = "4px solid red";
@@ -112,32 +114,33 @@ async function loadTasks() {
 
         <br><br>
 
-        <select class="status">
-          <option ${task.status==="To Do"?"selected":""}>To Do</option>
-          <option ${task.status==="In Progress"?"selected":""}>In Progress</option>
-          <option ${task.status==="Done"?"selected":""}>Done</option>
-        </select>
-
-        <br><br>
-
         <button class="edit">Edit</button>
         <button class="delete">Delete</button>
       `;
 
-      // EVENTS
-      div.querySelector(".status").addEventListener("change", (e) => {
-        updateStatus(task._id, e.target.value);
+      // DRAG START
+      div.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("id", task._id);
       });
 
+      // EDIT
       div.querySelector(".edit").addEventListener("click", () => {
         editTask(task);
       });
 
+      // DELETE
       div.querySelector(".delete").addEventListener("click", () => {
         deleteTask(task._id);
       });
 
-      taskList.appendChild(div);
+      // ADD TO COLUMN
+      if (task.status === "To Do") {
+        document.getElementById("todo").appendChild(div);
+      } else if (task.status === "In Progress") {
+        document.getElementById("inProgress").appendChild(div);
+      } else {
+        document.getElementById("done").appendChild(div);
+      }
     });
 
     // STATS
@@ -183,6 +186,7 @@ async function loadTasks() {
     showToast("Error loading tasks");
   }
 }
+
 
 // ================= ADD TASK =================
 async function addTask() {
@@ -305,3 +309,24 @@ setGreeting();
 // MIN DATE FIX
 document.getElementById("deadline").min =
   new Date().toISOString().split("T")[0];
+// ================= DRAG & DROP =================
+const zones = ["todo", "inProgress", "done"];
+
+zones.forEach(zoneId => {
+  const zone = document.getElementById(zoneId);
+
+  zone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+  });
+
+  zone.addEventListener("drop", async (e) => {
+    const id = e.dataTransfer.getData("id");
+
+    let newStatus = "To Do";
+    if (zoneId === "inProgress") newStatus = "In Progress";
+    if (zoneId === "done") newStatus = "Done";
+
+    await updateStatus(id, newStatus);
+    showToast("Task moved");
+  });
+});
